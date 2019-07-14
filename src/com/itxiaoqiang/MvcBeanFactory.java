@@ -21,7 +21,7 @@ public class MvcBeanFactory {
     //注册器
     private HashMap<String, MvcBean> apiMap = new HashMap<>();
 
-    private MvcBeanFactory(ApplicationContext applicationContext) {
+    public MvcBeanFactory(ApplicationContext applicationContext) {
         Assert.notNull(applicationContext, "argument 'applicationContext' must not be null");
         this.applicationContext = applicationContext;
 
@@ -52,6 +52,9 @@ public class MvcBeanFactory {
 
     }
 
+    public MvcBean getMvcBean(String url) {
+        return apiMap.get(url);
+    }
 
     private void addApiItem(MvcMapping mvcMapping, String beanName, Method method) {
         //拿到对应的bean
