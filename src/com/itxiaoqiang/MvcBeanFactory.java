@@ -4,6 +4,7 @@ import javafx.application.Application;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.Assert;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
@@ -18,7 +19,7 @@ public class MvcBeanFactory {
     private ApplicationContext applicationContext;
 
     //注册器
-    private HashMap<String, MVCBean> apiMap = new HashMap<>();
+    private HashMap<String, MvcBean> apiMap = new HashMap<>();
 
     private MvcBeanFactory(ApplicationContext applicationContext) {
         Assert.notNull(applicationContext, "argument 'applicationContext' must not be null");
@@ -54,13 +55,37 @@ public class MvcBeanFactory {
 
     private void addApiItem(MvcMapping mvcMapping, String beanName, Method method) {
         //拿到对应的bean
-        MVCBean apiRun = new MVCBean();
+        MvcBean apiRun = new MvcBean();
 
         //拿到对应的注解value
-        String value = mvcMapping.value();
+        apiRun.apiName = mvcMapping.value();
+        //标注指定注解的方法
+        apiRun.targetMethod = method;
 
+        apiRun.targetName = beanName;
+        apiRun.context = this.applicationContext;
 
+        apiMap.put(mvcMapping.value(), apiRun);
+    }
 
+    public static class MvcBean {
+        String apiName;
+        String targetName;
+        Object target;
+        Method targetMethod;
+        ApplicationContext context;
+
+        public Object run(Object... args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+            if (target == null) {
+                // spring ioc 容器里面去服务Bean 比如GoodsServiceImpl
+                target = context.getBean(targetName);
+            }
+            return targetMethod.invoke(target, args);
+        }
+
+        public Method getTargetMethod() {
+            return targetMethod;
+        }
     }
 
 
